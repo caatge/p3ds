@@ -127,7 +127,7 @@ void PatchesInit() {
 
 	_LdrRegisterDllNotification LdrRegisterDllNotification = (_LdrRegisterDllNotification)GetProcAddress(GetModuleHandle("ntdll.dll"), "LdrRegisterDllNotification");
 
-	if (!(LdrRegisterDllNotification(0, MyLdrDllNotification, NULL, &cookie) == STATUS_SUCCESS)) {
+	if (LdrRegisterDllNotification(0, MyLdrDllNotification, NULL, &cookie) != STATUS_SUCCESS) {
 		printf("NTSTATUS != STATUS_SUCCESS!\n");
 	}
 }
