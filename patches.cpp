@@ -106,17 +106,16 @@ void UnloadCallback(const char* str, void* module_base) {
 }
 
 void __stdcall MyLdrDllNotification( ULONG NotificationReason, PLDR_DLL_NOTIFICATION_DATA NotificationData, PVOID Context) {
+	char dllname[MAX_PATH];
+	size_t ms_forced_me_to_create_this_variable;
+
 	if (NotificationReason == LDR_DLL_NOTIFICATION_REASON_LOADED) {
-		char dllname[MAX_PATH];
-		size_t ms_forced_me_to_create_this_variable;
 		wcstombs_s(&ms_forced_me_to_create_this_variable, dllname, NotificationData->Loaded.BaseDllName->Buffer, MAX_PATH);
 		LoadCallback(dllname, NotificationData->Loaded.DllBase);
 	}
 
 	if (NotificationReason == LDR_DLL_NOTIFICATION_REASON_UNLOADED) {
-		char dllname[MAX_PATH];
-		size_t ms_forced_me_to_create_this_variable;
-		wcstombs_s(&ms_forced_me_to_create_this_variable, dllname, NotificationData->Loaded.BaseDllName->Buffer, MAX_PATH);
+		wcstombs_s(&ms_forced_me_to_create_this_variable, dllname, NotificationData->Unloaded.BaseDllName->Buffer, MAX_PATH);
 		UnloadCallback(dllname, NotificationData->Unloaded.DllBase);
 	}
 }
