@@ -9,26 +9,16 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libMinHook", "minhook\build
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
-		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{35B8553C-4DD7-4D7A-B43B-99F517E815C1}.Debug|x64.ActiveCfg = Debug|x64
-		{35B8553C-4DD7-4D7A-B43B-99F517E815C1}.Debug|x64.Build.0 = Debug|x64
 		{35B8553C-4DD7-4D7A-B43B-99F517E815C1}.Debug|x86.ActiveCfg = Debug|Win32
 		{35B8553C-4DD7-4D7A-B43B-99F517E815C1}.Debug|x86.Build.0 = Debug|Win32
-		{35B8553C-4DD7-4D7A-B43B-99F517E815C1}.Release|x64.ActiveCfg = Release|x64
-		{35B8553C-4DD7-4D7A-B43B-99F517E815C1}.Release|x64.Build.0 = Release|x64
 		{35B8553C-4DD7-4D7A-B43B-99F517E815C1}.Release|x86.ActiveCfg = Release|Win32
 		{35B8553C-4DD7-4D7A-B43B-99F517E815C1}.Release|x86.Build.0 = Release|Win32
-		{F142A341-5EE0-442D-A15F-98AE9B48DBAE}.Debug|x64.ActiveCfg = Debug|x64
-		{F142A341-5EE0-442D-A15F-98AE9B48DBAE}.Debug|x64.Build.0 = Debug|x64
 		{F142A341-5EE0-442D-A15F-98AE9B48DBAE}.Debug|x86.ActiveCfg = Debug|Win32
 		{F142A341-5EE0-442D-A15F-98AE9B48DBAE}.Debug|x86.Build.0 = Debug|Win32
-		{F142A341-5EE0-442D-A15F-98AE9B48DBAE}.Release|x64.ActiveCfg = Release|x64
-		{F142A341-5EE0-442D-A15F-98AE9B48DBAE}.Release|x64.Build.0 = Release|x64
 		{F142A341-5EE0-442D-A15F-98AE9B48DBAE}.Release|x86.ActiveCfg = Release|Win32
 		{F142A341-5EE0-442D-A15F-98AE9B48DBAE}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection

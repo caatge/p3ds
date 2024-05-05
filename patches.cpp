@@ -1,12 +1,9 @@
-#include "windows.h"
+#include "silver-bun.h"
+#include "ntldr.h"
 #include "MinHook.h"
 #include "cstdio"
-#include "map"
-#include "string"
-#include "vector"
-#include "silver-bun.h"
-#include "set"
 #include "patches.h"
+#include "ntstatus.h"
 
 void(__thiscall* oUpdateAreaBits)(void* this_, void* pl, void* a);
 
@@ -16,29 +13,6 @@ void __fastcall UpdateAreaBits_not_reckless(void* this_, void* edx, void* player
 		return;
 	}
 	return oUpdateAreaBits(this_, player, areabits);
-}
-
-// HOOK SHIT
-
-void LoadCallback(const char* str);
-
-// WINAPI BS
-HMODULE(WINAPI* oLoadLibraryA)(LPCSTR);
-HMODULE WINAPI hkLoadLibraryA(LPCSTR mod) {
-	HMODULE m = oLoadLibraryA(mod);
-	if (m) {
-		LoadCallback(mod);
-	}
-	return m;
-}
-
-HMODULE(WINAPI* oLoadLibraryExA)(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFlags);
-HMODULE WINAPI hkLoadLibraryExA(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFlags) {
-	HMODULE m = oLoadLibraryExA(lpLibFileName, hFile, dwFlags);
-	if (m) {
-		LoadCallback(lpLibFileName);
-	}
-	return m;
 }
 
 std::map<std::string, std::set<uintptr_t>> hooked_functions;
@@ -79,15 +53,13 @@ detour_table_t detours = {
 	}
 };
 
-//TODO: perhaps pass the HMODULE to this than using GetModuleHandle to get it
-//TODO: unloading
-void LoadCallback(const char* str) {
+void LoadCallback(const char* str, void* module_base) {
 
 	for (auto& kv_pair : patches) {
-		if (strstr(str, kv_pair.first.c_str())) {
+		if (kv_pair.first == str) {
 			printf("patching %s\n", str);
 			// patch module
-			CModule mod(kv_pair.first.c_str());
+			CModule mod((uintptr_t)module_base);
 			for (auto& patch_pair : kv_pair.second) {
 				CMemory mem = mod.FindPatternSIMD(patch_pair.first.c_str());
 				if (!mem) {
@@ -100,14 +72,14 @@ void LoadCallback(const char* str) {
 	}
 
 	for (auto& kv_pair : detours) {
-		if (strstr(str, kv_pair.first.c_str())) {
+		if (kv_pair.first == str) {
 			for (auto& detour : kv_pair.second) {
 
 				if (hooked_functions.contains(kv_pair.first) && hooked_functions[kv_pair.first].contains(detour.fn)) {
 					continue;
 				}
 
-				char* mbase = (char*)GetModuleHandle(kv_pair.first.c_str());
+				char* mbase = (char*)module_base;
 				if (MH_CreateHook(mbase + detour.fn, detour.detour, detour.trampoline) == MH_OK && MH_EnableHook(mbase + detour.fn) == MH_OK) {
 					printf("detoured %p successfully!\n", mbase + detour.fn);
 					if (!hooked_functions.contains(kv_pair.first)) {
@@ -121,11 +93,42 @@ void LoadCallback(const char* str) {
 			}
 		}
 	}
+
 }
+
+void UnloadCallback(const char* str, void* module_base) {
+	if (hooked_functions.contains(str)) {
+		for (auto& fn : hooked_functions[str]) {
+			char* base = (char*)module_base;
+			MH_RemoveHook(base + fn);
+		}
+	}
+}
+
+void __stdcall MyLdrDllNotification( ULONG NotificationReason, PLDR_DLL_NOTIFICATION_DATA NotificationData, PVOID Context) {
+	if (NotificationReason == LDR_DLL_NOTIFICATION_REASON_LOADED) {
+		char dllname[MAX_PATH];
+		size_t ms_forced_me_to_create_this_variable;
+		wcstombs_s(&ms_forced_me_to_create_this_variable, dllname, NotificationData->Loaded.BaseDllName->Buffer, MAX_PATH);
+		LoadCallback(dllname, NotificationData->Loaded.DllBase);
+	}
+
+	if (NotificationReason == LDR_DLL_NOTIFICATION_REASON_UNLOADED) {
+		char dllname[MAX_PATH];
+		size_t ms_forced_me_to_create_this_variable;
+		wcstombs_s(&ms_forced_me_to_create_this_variable, dllname, NotificationData->Loaded.BaseDllName->Buffer, MAX_PATH);
+		UnloadCallback(dllname, NotificationData->Unloaded.DllBase);
+	}
+}
+
+PVOID cookie;
 
 void PatchesInit() {
 	MH_Initialize();
-	MH_CreateHook(&LoadLibraryA, &hkLoadLibraryA, (void**)&oLoadLibraryA);
-	MH_CreateHook(&LoadLibraryExA, &hkLoadLibraryExA, (void**)&oLoadLibraryExA);
-	MH_EnableHook(MH_ALL_HOOKS);
+
+	_LdrRegisterDllNotification LdrRegisterDllNotification = (_LdrRegisterDllNotification)GetProcAddress(GetModuleHandle("ntdll.dll"), "LdrRegisterDllNotification");
+
+	if (!(LdrRegisterDllNotification(0, MyLdrDllNotification, NULL, &cookie) == STATUS_SUCCESS)) {
+		printf("NTSTATUS != STATUS_SUCCESS!\n");
+	}
 }
