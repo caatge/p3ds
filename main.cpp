@@ -12,6 +12,8 @@ static constexpr unsigned char s_AllocConsoleShortCircuit[] =
     0xc3,       // RET
 };
 
+char msg[] = "We do not support vgui SRCDS and you shouldn't want that anyway if you're doing stuff properly.\nPlease launch with -console";
+
 int main(int argc, char* argv[])
 {
     // get back to where we would be if we were WinMain:
@@ -37,6 +39,11 @@ int main(int argc, char* argv[])
     {
         MessageBoxA(NULL, "Failed calling GetModuleFileName", "Launcher Error", 0);
         return 0;
+    }
+
+    if (!strstr(GetCommandLine(), "-console")) {
+        MessageBox(NULL, msg, "Bad Boy.", 0);
+        ExitProcess(1);
     }
 
     char* pLastSlash = strrchr(szModuleFileName, '\\');
